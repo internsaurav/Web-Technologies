@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<link rel="stylesheet" href="facebook.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<title>Facebook Search</title>
+</head>
+<body>
+	<script>
+	  window.fbAsyncInit = function() {
+	    FB.init({
+	      appId      : '413132942383481',
+	      xfbml      : true,
+	      version    : 'v2.8'
+	    });
+	    FB.AppEvents.logPageView();
+	  };
+	
+	  (function(d, s, id){
+	     var js, fjs = d.getElementsByTagName(s)[0];
+	     if (d.getElementById(id)) {return;}
+	     js = d.createElement(s); js.id = id;
+	     js.src = "//connect.facebook.net/en_US/sdk.js";
+	     fjs.parentNode.insertBefore(js, fjs);
+	   }(document, 'script', 'facebook-jssdk'));
+</script>
+	
+	<div class="container-fluid">
+		<nav class="navbar navbar-inverse formbar row">
+			<div class="col-md-5 leftFloating" >
+		      <span class="navbar-brand" >Fb Search</span>
+		    </div>
+		    <div class="col-md-7">
+		    	<form name="fbData" class="navbar-form navbar-left" >
+		    		<div class="row">
+		    			<div class="col-xs-7">
+		    				<div class="input-group input-group2 leftFloating">
+			    				<input type="text" id="keyword" required value="" class="form-control" placeholder="type something..">
+			    				<div class="input-group-btn">
+		          					<button class="btn btn-default search-btn" type="button" id="submit">
+		          						<i class="glyphicon glyphicon-search"></i>
+		          					</button>
+		          				</div>
+		          			</div>	
+		    			</div>	
+		          		<div class="col-xs-5 rightFloating">
+		          			<button class="btn btn-default" id="clear">Clear</button>
+		          		</div>
+		    		</div>
+				</form>	
+			</div>
+		</nav>
+		
+		<ul class="nav nav-pills nav-justified red">
+		    <li class="active tablinks"><a data-toggle="pill" class="type" value='user'>Users</a></li>
+		    <li class="tablinks"><a data-toggle="pill" value='page' class="type">Pages</a></li>
+		    <li class="tablinks"><a data-toggle="pill" value='event' class="type">Events</a></li>
+		    <li class="tablinks"><a data-toggle="pill" value='place' class="type">Places</a></li>
+		    <li class="tablinks"><a data-toggle="pill" value='group' class="type">Groups</a></li>
+		    <li><a data-toggle="pill" value='favorite'>Favorites</a></li>
+		</ul>
+		<!-- <p id="sample"></p> -->
+		<div id="result1"></div>
+		<div id="result2"></div>
+		<div ng-app="fbApp" ng-controller="fbCtrl">
+			
+			<div class="progress pbar" hidden>
+			    <div class="progress-bar progress-bar-striped active" role="progressbar" style="width:50%">
+			    </div>
+			  </div>
+			<div id='gen_results' hidden='true'>
+            <table  class="table table-hover" >
+				<thead><tr><th>#</th><th>Profile photo</th><th>Name</th><th>Favourite</th><th>Detail</th></tr></thead>
+				<tbody>	
+					<tr ng-repeat="x in names">
+					  	<td>{{$index+1}}</td>
+					    <td><a ng-href="{{ x.imageLink }}" target="_blank" ><img ng-src="{{ x.imageLink }}" width="40" height="30" /></a></td>
+					    <td>{{ x.name }}</td>
+					    <td><button class="star glyphicon glyphicon-star-empty" ng-click="starClick($event,x.id,x.name,x.imageLink)"></button></td>
+					    <td><button class="details" ng-click="checkDetails(x.id, x.name, x.imageLink)">&gt;</button></td>
+			  		</tr>
+				</tbody>
+			</table>
+          <button id="prevPage" hidden ng-click="getPaginatedResults('prevPage')">previous</button>
+          <button id="nextPage" hidden ng-click="getPaginatedResults('nextPage')">next</button>
+          </div>
+			
+          
+		<div id="details" hidden>
+          <div>
+				<button ng-click="go_back()">Back</button>
+				
+			</div>
+			<div>
+				<button ng-click="post_to_timeline()">Facebook</button>
+				
+			</div>
+			<div class="row">
+			<div class="panel panel-default col-sm-6">
+				  <div class="panel-heading">Albums</div>
+              <div id="noAlbums" hidden class="panel-body">
+                       No Data Found</div>
+				  <div class="panel-body">
+					<div class="panel-group" id="accordion">
+						<div ng-repeat="album in albums" class="panel panel-default">
+                          <div class="panel-heading">
+                        <h4 class="panel-title">
+                          <a data-toggle="collapse" data-parent="#accordion" href="{{ '#collapse'+$index }}">{{ album.name }}</a>
+                            </h4></div>
+                          
+	                        <div id="{{ 'collapse'+$index }}" class="panel-collapse collapse ">
+            
+	                          <div class="panel-body">
+	                            <div ng-repeat="photo in album.photos">
+	                              <img ng-src= "{{ photo.picture }}" width="500" height="200" />
+	                              <!-- <img ng-src= "func(photo.picture)" width="500" height="200" /> -->
+	                            </div>
+	                          </div>
+						   </div>
+					    </div>
+					</div>
+				</div>
+	          </div>
+				
+				
+				<div class="panel panel-default col-sm-6">
+				  <div class="panel-heading">Posts</div>
+                  <div id="noPosts" hidden class="panel-body">
+                       No Data Found</div>
+				  <div class="panel-body">
+					<div>
+					<div ng-repeat="post in posts">
+                      
+	                  <div class="panel panel-default">
+	                    <div class="panel-heading">{{ account_name }}</div>
+	                    <div class="panel-body">
+	                        <div><img ng-src= "{{ account_dp }}" width="40" height="30" /></div>
+						   <div>{{ post.created_time.date }}</div>
+						   <div>{{ post.message }} </div>
+	                    </div>
+	                  </div><!-- post internal panel ends here -->
+					</div>
+				   </div>
+			      </div>	
+			    </div><!-- end of post panel-->
+				</div><!-- end of Row class encapsulating both big panels -->
+		</div><!-- end of details -->
+		</div> <!-- end of angular app -->
+	</div><!-- end of fluid container -->
+</body>
+<script>
+	//get the location using a navigator function
+	var latitude="initial_lat";
+	var longitude="initial_lon";
+	
+	//global detail variables
+	var detailed_user_name;
+	var detailed_user_pic;
+    var last_query;
+	
+	//global type variable
+	var queryType;
+	
+	function getLocation() {
+	    if (navigator.geolocation) {
+	        navigator.geolocation.getCurrentPosition(showPosition);
+	    }
+	}
+	function showPosition(position) {
+	    latitude = position.coords.latitude+"";
+	    longitude = position.coords.longitude+""; 
+	}
+	getLocation();
+	
+	var app = angular.module('fbApp',[]);
+	app.controller('fbCtrl',function($scope){
+		var results;
+		var keyword = "";
+		$scope.names = results;
+		$scope.details="No details yet";
+		// $scope.header = "";
+		//for glyiphicon
+		
+		$scope.starClick=function(event,id,name,pic) {
+			var myclass = angular.element(event.target);
+            // $('#sample').html(myclass.attr('class'));
+            myclass.toggleClass("glyphicon-star glyphicon-star-empty");
+
+            var fav_details={'name':name, 'pic':pic, 'queryType':queryType};
+            // $('#result1').html(fav_details['name'] +" "+ fav_details['pic'] +" "+ fav_details['queryType']);
+            localStorage.setItem(id,JSON.stringify(fav_details));
+            var retrieved_det = JSON.parse(localStorage.getItem(id));
+            // $('#result2').html(retrieved_det['name'] +" "+ retrieved_det['pic'] +" "+ retrieved_det['queryType']);
+        };
+		
+		
+		//form submission should communiate with server suing AJAX call. submit button scope starts here
+		/*
+		 * clicking on submit should submi th eform.
+		 * also while querying it should check the next if available and send true or false
+		 */
+		$("#submit").click(function(){
+			queryType='users';
+			$('.pbar').show();
+			keyword = $('#keyword').val();
+			var initial_request = $.ajax({
+			  url: "index.php",
+			  type: "GET",
+			  data: {'searchtype':'user', 'keyword':keyword,'latitude':latitude,'longitude':longitude,'callType':'general'},
+			  success:function(data){
+			  	results = jQuery.parseJSON(data);
+//                $('#result1').html(JSON.stringify(results));
+			  	$('.pbar').hide();
+                var pag = results.splice(results.length-1,1);//removes the pagination section
+                (pag[0].nextPage)?$('#nextPage').show():$('#nextPage').hide();
+                (pag[0].prevPage)?$('#prevPage').show():$('#prevPage').hide();
+//                last_query=results.splice(results.length-1,1);
+//			  	 $('#result1').html(JSON.stringify(last_query));
+//                $('#result2').html(JSON.stringify(results));
+				$scope.$apply(function(){
+					$scope.names=results;
+					$('#gen_results').show();
+					$scope.header = "<p>Submit Query</p>";
+					$('#headers').show();
+				});
+			  }
+			});
+		});//submit button scope ends here
+		
+		//tab click scope starts here
+		$(".type").click(function(){
+          
+			$scope.header = "";
+			var buttonType = $(this).attr('value');
+			queryType = buttonType+"s";
+			// $("#sample").html(buttonType);
+			if(keyword != ""){
+              $('#gen_results').hide();
+//              $('#prevPage').hide();
+//            $('#nextPage').hide();
+              $('.pbar').show();
+				var tab_request = $.ajax({
+				  url: "index.php",
+				  type: "GET",
+				  data: {'searchtype':buttonType, 'keyword':keyword,'latitude':latitude,'longitude':longitude,'callType':'general'},
+				  success:function(data){
+				  	results = jQuery.parseJSON(data);
+                    $('.pbar').hide();
+                    $('#gen_results').show();
+                    var pag = results.splice(results.length-1,1);//removes the pagination section
+                  (pag[0].nextPage)?$('#nextPage').show():$('#nextPage').hide();
+                  (pag[0].prevPage)?$('#prevPage').show():$('#prevPage').hide();
+					$scope.$apply(function(){
+						$scope.names=results;
+						// $scope.header = "<p>Tab Query</p>";
+						// $('#headers').show();
+						$('#gen_results').show();
+					});
+				  }
+				});
+			}
+		}); //tab click scope ends here		
+		
+		//details scope
+		$scope.checkDetails=(function(id,name,pic){
+			detailed_user_name=name;
+			detailed_user_pic=pic;
+            $('#gen_results').hide();
+		    $('#headers').hide();
+            $('#noAlbums').hide();
+            $('#noPosts').hide();
+//            $('#prevPage').hide();
+//            $('#nextPage').hide();
+			var detail_request = $.ajax({
+			  url: "index.php",
+			  type: "GET",
+			  data: {'memberID':id, 'callType':'details'},
+			  success:function(data){
+			  	$('#details').show();
+//                $('#result1').html(data);
+			  	var parsed_details = jQuery.parseJSON(data);
+			  	$scope.$apply(function(){
+                  if("albums" in parsed_details){
+                    $scope.albums=parsed_details.albums;
+                    
+                  }
+                  else{
+                    $('#noAlbums').show();
+                  }
+			  		
+                  if("posts" in parsed_details){
+                    $scope.posts=parsed_details.posts;
+                  }
+                  else{
+                    $('#noPosts').show();
+                  }
+			  		
+					$scope.account_name=parsed_details.name;
+                  $scope.account_dp=parsed_details.picture.url;
+			  		
+			  	});
+			 },
+			});
+		});
+		
+		$scope.post_to_timeline=function(){
+			FB.ui({
+			  method: 'feed',
+			  name: detailed_user_name,
+			  picture: detailed_user_pic,
+			  caption: 'FB SEARCH FROM USC CSCI571',
+			  display:'popup',
+			}, function(response){
+				Window.open('response');
+			});
+		};
+      
+      
+      $scope.go_back=function(){
+			$scope.albums=[];
+          $scope.posts=[];
+        $('#details').hide();
+        $('#gen_results').show();
+        
+            
+		};
+		
+		//clear button this
+		/*changes the tab back to users
+		 * hides the details page,
+		 * resets the names and posts to empty
+		 * 
+		 */
+		$('#clear').click(function(){
+			// var navPills=$('.tablinks.active');
+			var navPills = angular.element(document.querySelector('.tablinks.active'));
+			navPills.removeClass('active');
+			navPills = angular.element(document.querySelector('.tablinks')); //returns the first matched element
+			navPills.addClass('active');
+			// navPills=$('.tablinks');
+			// navPills[0].addClass('active');
+			// somestring = navPills.length;
+			// $('#result1').html(somestring);
+			$('#details').hide();
+			$scope.$apply(function(){
+				$scope.names=[];
+				$scope.albums=[];
+				$scope.posts=[];
+			});
+			$('#keyword').val("");
+			$('#gen_results').hide();
+//			$('#prevPage').hide();
+//            $('#nextPage').hide();
+			return false;
+		});
+      
+      //paginated results
+      $scope.getPaginatedResults = function(direction){
+//        $('#result1').html(direction);
+        $('#gen_results').hide();
+//        $('#prevPage').hide();
+//        $('#nextPage').hide();
+        $('.pbar').show();
+        var pagination_request = $.ajax({
+			  url: "index.php",
+			  type: "GET",
+			  data: {'callType':'pagination','direction':direction},
+			  success:function(data){
+//                $('#result1').html(data);
+			  	results = jQuery.parseJSON(data);
+			  	$('.pbar').hide();
+                $('#gen_results').show();
+                var pag = results.splice(results.length-1,1);//removes the pagination section
+                (pag[0].nextPage)?$('#nextPage').show():$('#nextPage').hide();
+                (pag[0].prevPage)?$('#prevPage').show():$('#prevPage').hide();
+//			  	 $('#result1').html(JSON.stringify(pag));
+//                $('#result2').html(JSON.stringify(results));
+				$scope.$apply(function(){
+					$scope.names=results;
+					$('#gen_results').show();
+					$scope.header = "<p>Submit Query</p>";
+					$('#headers').show();
+				});
+			  }
+			});
+      }
+      
+		
+	});//normal controller scope ends here
+	
+</script>
+</html>

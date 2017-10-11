@@ -1,0 +1,217 @@
+<html>
+<head>
+    <title> Learning XML-JS-DOM </title>
+    <style>
+        #inputForm {
+            position: absolute;
+            text-align: center;
+            left: 40%;
+            top: 20%;
+        }
+    </style>
+</head>
+<body>
+    <!-- the form portion -->
+    <div id="inputForm" onsubmit="return false;">
+        <span style="font-weight:bold">Enter URL for Airlines List XML File</span>
+        <form name="input" method="post" id="location" >
+            <input type="text" id="textbox" name="URL" maxlength="255" size="50" value="" />
+            <br />
+            <input type="button" name="submit" value="Submit Query" onclick="viewXML(this.form)" />
+        </form>
+    </div>
+    
+    <!--javascript portion -->
+    <script>
+        //submitting the form when pressing enter
+        document.getElementById("textbox").onkeydown=function(e) {
+            if (e.keyCode == 13){
+                viewXML(document.forms[0]);
+            }
+        }
+        var html_text="";
+        
+        // fucntion which trims whitespaces   
+        function trimStr(str) {
+            return str.replace(/^\s+|\s+$/g, '');
+        }
+        
+        function viewXML(inputform){
+            var URL= inputform.URL.value;
+            html_text="";
+            
+            var trimmedURL= trimStr(URL)
+            if(trimmedURL==""){
+                alert("no URL input");
+                return;
+            }
+        
+            
+            //load the xml file
+            var xmlDoc= loadXML(trimmedURL);
+            if (window.ActiveXObject) {
+                if(xmlDoc.parseError.errorCode !=0) {
+                    var myErr = xmlDoc.parseError;
+                    gererateError(xmlDoc);
+                    hWin = window.open("","Error","height=300,width=340");
+                    hWin.document.write(html_text);
+                }
+                else{
+                    generateHTML(xmlDoc);
+                    
+                    hWin=window.open("","Assignment4","height=800,width=1200");
+                    hWin.document.write(html_text);
+                }
+            }
+            else{
+                
+                xmlDoc.onload=generateHTML(xmlDoc);
+                if (html_text != "") {
+                    hWin=window.open("","Assignment4","height=800,width=1200");
+                    hWin.document.write(html_text);
+                }
+                
+            }
+            hWin.document.close();
+              
+            //var example=xmlDoc.getElementsByTagName("Airline")[0].innerHTML;
+            //document.getElementById("test").innerHTML=html_text;
+        }
+        
+        //function definition for loading the xml file from URL
+        function loadXML(url){
+            //Creating new HTTP request
+            if(window.XMLHttpRequest){
+                var xmlhttp=new XMLHttpRequest();
+            }
+            else{
+                var xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            xmlhttp.open("GET",url,false);
+            xmlhttp.send();
+            
+            var xmlDoc=xmlhttp.responseXML;
+            //check for filenot found
+            if (xmlhttp.status == 404) {
+                alert("File not found");
+                return;
+            }
+            
+            //check for invalid XML
+            if (xmlDoc == null || xmlDoc.documentElement.nodeName == "parsererror"){
+                    alert("Error in XML file");
+                    return;
+                }
+            return xmlDoc;            
+        }
+        
+        //function definition for generating the HTML document
+        function generateHTML(xmlDoc){
+            ELEMENT_NODE = 1; // MS parser doesn't define Node.ELEMENT_NODE
+            var root=xmlDoc.DocumentElement;//extracts the root element
+            
+            //error checking for missing airlines data
+            var checkAirlinesData=xmlDoc.getElementsByTagName("Airline");
+            if (checkAirlinesData.length == 0){
+                alert("No Airline Data found");
+                return;
+            }
+            
+            html_text+="<html><head><title>XML Parse Result</title></head><body>";
+            html_text+="<table border='2'>";
+            html_text+="<tbody>";
+            //import the header and start the table
+            var tableHeaders=xmlDoc.getElementsByTagName("Header")[0].getElementsByTagName("Data");
+            html_text+="<tr>";
+            for(var i=0; i<tableHeaders.length; i++){
+                html_text+="<th>"+tableHeaders[i].innerHTML+"</th>";
+            }
+            html_text+="</tr>";
+            //Read in each entry
+            var entries = xmlDoc.getElementsByTagName("Row");
+            for (var i=0; i<entries.length; i++){
+                var airlines=first_child(entries[i]);
+                var iata=node_after(airlines);
+                var hubs=node_after(iata);
+                var hub=hubs.getElementsByTagName("Hub");
+                var notes=node_after(hubs);
+                var homepage=node_after(notes);
+                var plane=node_after(homepage);
+                //adding the row data
+                html_text+="<tr>";
+                html_text+="<td>"+ trimStr(airlines.innerHTML) + "</td>";
+                html_text+="<td>"+ trimStr(iata.innerHTML) + "</td>";
+                html_text+="<td><ul>";
+                for (var j=0; j<hub.length; j++) {
+                    if(j == 0){
+                        html_text+="<li><b>"+trimStr(hub[j].innerHTML)+"</b></li>";
+                    }
+                    else {
+                        html_text+="<li>"+trimStr(hub[j].innerHTML)+"</li>";
+                    }
+                    
+                }
+                html_text+="</ul></td>";
+                html_text+="<td>"+ trimStr(notes.innerHTML) + "</td>";
+                html_text+="<td><a href='"+ trimStr(homepage.innerHTML) + "'>"+homepage.innerHTML+"</td>";
+                
+                //no image condition
+                if ( plane.innerHTML == null || plane.innerHTML == "" ){
+                    html_text+="<td></td>";
+                }
+                else {
+                    html_text+="<td>"+"<image src='"+ plane.innerHTML +"' width='200'>" + "</td>";
+                }
+                
+                html_text+="</tr>";
+                
+            }
+            
+            html_text+="</tbody></body></html>";
+            
+        }
+        
+        //Checking all white space
+        function is_all_ws( nod )
+        {
+            // Use ECMA-262 Edition 3 String and RegExp features
+            return !(/[^\t\n\r ]/.test(nod.textContent));
+        }
+        
+        //checks if the node is ignorable
+        function is_ignorable( nod )
+        {
+            return ( nod.nodeType == 8) || // A comment node
+                 ( (nod.nodeType == 3) && is_all_ws(nod) ); // a text node, all ws
+        }
+        
+        //checks the previous node if any
+        function node_before( sib )
+        {
+            while ((sib = sib.previousSibling)) {
+                if (!is_ignorable(sib)) return sib;
+                }
+            return null;
+        }
+        
+        //returns next node if any
+        function node_after( sib )
+        {
+            while ((sib = sib.nextSibling)) {
+            if (!is_ignorable(sib)) return sib;
+            }
+            return null;
+        }
+        
+        //returns first child
+        function first_child( par )
+        {
+            var res=par.firstChild;
+            while (res) {
+            if (!is_ignorable(res)) return res;
+            res = res.nextSibling;
+            }
+            return null;
+        }
+    </script>
+<noscript></body>

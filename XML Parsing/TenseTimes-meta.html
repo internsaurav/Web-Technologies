@@ -1,0 +1,159 @@
+<html>
+<head>
+    <title> Learning XML-JS-DOM </title>
+</head>
+<body>
+    
+    <p id="demo">Initial Text</p>
+    
+    <div id="inputForm" >
+        <span style="font-weight:bold">Enter URL for Airlines List XML File</span>
+        <form name="input" method="post" id="location" >
+            <input type="text" name="URL" maxlength="255" size="100" value="airlinelist.xml" />
+            <br />
+            <input type="button" name="submit" value="Submit Query" onclick="viewXML(this.form)" />
+        </form>
+    </div>
+    <script type="text/javascript">
+        /*
+        This function generates the HTML data
+        function generateHTML(xmlDoc){
+            ELEMENT_NODE = 1; // MS parser doesn't define Node.ELEMENT_NODE
+            var root=xmlDoc.DocumentElement; //extracts the root node, mainline in this case
+            var html_text="<html><head><title>XML Parse Result</title></head><body>";//random text
+            html_text+="<table border='2'>";
+            var caption=xmlDoc.getElementsByTagName("title").item(0).firstChild.nodeValue;
+            html_text+="<caption align='left'><h1>"+caption+"</h1></caption>";
+            planes=xmlDoc.getElementsByTagName("aircraft");
+            planeNodeList=planes.item(0).childNodes;
+            html_text+="<tbody>";
+            html_text+="<tr>";
+            x=0; y=0;
+            // output the headers
+            for(i=0;i<planeNodeList.length;i++)
+            { if(planeNodeList.item(i).nodeType==ELEMENT_NODE)
+            { header=planeNodeList.item(i).nodeName;
+            if(header=="Airbus")
+            { header="Family"; x=120; y=55; }
+            if(header=="Boeing")
+            { header="Family"; x=100; y=67; }
+            if(header=="seats")
+            header="Seats";
+             if(header=="Wingspan") header="Wing Span";
+            if(header=="height") header="Height";
+            html_text+="<th>"+header+"</th>"; } }
+            html_text+="</tr>";
+            // output out the values
+            for(i=0;i<planes.length;i++) //do for all planes
+            { planeNodeList=planes.item(i).childNodes; //get properties of a plane
+            html_text+="<tr>"; //start a new row of the output table
+            for(j=0;j<planeNodeList.length;j++)
+            { if(planeNodeList.item(j).nodeType==ELEMENT_NODE)
+            {
+            if(planeNodeList.item(j).nodeName=="Image")
+            {//handle images separately
+            html_text+="<td><img
+            src='"+planeNodeList.item(j).firstChild.nodeValue+"' width='"+x+"'
+            height='"+y+"'></td>"; }
+            else {
+            html_text+="<td>"+planeNodeList.item(j).firstChild.nodeValue+"</td>";
+            } } }
+            html_text+="</tr>"; }
+            html_text+="</tbody>"; html_text+="</table>";
+            html_text+="</body></html>";
+            
+        }     
+        */
+        
+        
+        /*
+            This function gets called when the button is clicked. 
+            Takes the whole form as input.
+        */
+        function viewXML(what){
+            //Extracts the value field of field named URL
+            var URL = what.URL.value;
+            document.getElementById("demo").innerHTML="Yes";
+            
+            /*
+            var xmlhttp;
+            //function definition for loading the xml file from URL
+            function loadXML(url){
+                //Creating new HTTP request
+                if(window.XMLHttpRequest){
+                    xmlhttp=new XMLHttpRequest();
+                }
+                else{
+                    xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+                }
+                xmlhttp.open("GET",url,false);
+                xmlhttp.send();
+                var xmlDoc=xmlhttp.responseXML;
+                return xmlDoc;
+                */
+            
+            } 
+            /*
+            //calling the loadXML function and getting the XML document
+            var xmlDoc= loadXML(URL);
+            //checking the browser versions
+            if (window.ActiveXObject) {
+                if(xmlDoc.parseError.errorCode !=0) {
+                    var myErr = xmlDoc.parseError;
+                    gererateError(xmlDoc);
+                    hWin = window.open("","Error","height=300,width=340");
+                    hWin.document.write(html_text);
+                }
+                else{
+                    generateHTML(xmlDoc);
+                    hWin=window.open("","Assignment4","height=800,width=600");
+                    hWin.document.write(html_text);
+                }
+            }
+            else{
+                xmlDoc.onload=generateHTML(xmlDoc);
+                hWin=window.open("","Assignment4","height=800,width-600");
+                hWin.document.write(html_text);
+            }
+            hWin.document.close();
+            */
+        
+          /*
+        //Checking all white space
+        function is_all_ws( nod )
+        {
+            // Use ECMA-262 Edition 3 String and RegExp features
+            return !(/[^\t\n\r ]/.test(nod.textContent));
+        }
+        
+        //checks if the node is ignorable
+        function is_ignorable( nod )
+        {
+            return ( nod.nodeType == 8) || // A comment node
+                 ( (nod.nodeType == 3) && is_all_ws(nod) ); // a text node, all ws
+        }
+        
+        //checks the previous node if any
+        function node_before( sib )
+        {
+            while ((sib = sib.previousSibling)) {
+                if (!is_ignorable(sib)) return sib;
+                }
+            return null;
+        }
+        
+        //returns next node if any
+        function node_after( sib )
+        {
+            while ((sib = sib.nextSibling)) {
+            if (!is_ignorable(sib)) return sib;
+            }
+            return null;
+        }
+        */
+        }
+        
+    </script>
+    
+<noscript /></body>
+</html>
